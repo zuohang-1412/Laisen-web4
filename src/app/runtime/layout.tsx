@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 
-import { SiteShell } from "@/features/site/components/site-shell";
+import { SiteHeader } from "@/features/site/components/site-header";
 
 export default function RuntimeLayout({ children }: { children: ReactNode }) {
-  return <SiteShell showFooter={false} mainClassName="runtime-route-main">{children}</SiteShell>;
+  return (
+    <div className="site-shell min-h-screen">
+      <SiteHeader />
+      <main className="runtime-route-main">{children}</main>
+    </div>
+  );
 }
