@@ -50,6 +50,28 @@ export function SiteHeader() {
             {siteCopy.nav.primaryCta}
           </Link>
         </div>
+
+        <nav aria-label="Primary mobile" className="flex gap-2 overflow-x-auto pb-3 md:hidden">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={`mobile-${item.href}`}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "inline-flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium transition",
+                  isActive
+                    ? "bg-white/70 text-[var(--site-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                    : "site-link",
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
