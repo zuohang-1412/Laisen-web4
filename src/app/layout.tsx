@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
+import { cookieToInitialState } from "wagmi";
+
+import { AppProviders } from "@/app/providers";
+import { wagmiConfig } from "@/features/onchain/config/wagmi-config";
 
 import "./globals.css";
 
@@ -14,18 +19,22 @@ export const metadata: Metadata = {
   description: "Laisen is a Web4 Autonomous Execution Engine.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const cookie = headersList.get("cookie");
+  const initialState = cookieToInitialState(wagmiConfig, cookie);
+
   return (
     <html
       lang="en"
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--site-bg)] text-[var(--site-text)]">
-        {children}
+        <AppProviders initialState={initialState}>{children}</AppProviders>
       </body>
     </html>
   );
