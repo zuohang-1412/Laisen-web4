@@ -8,6 +8,8 @@ Its single job is to make one story immediately legible in a live demo:
 
 `Intent -> AI Protocol Package -> Wallet Connect -> Base Sepolia Deploy -> Signal Intake -> AI Decision -> DAO Propose / Vote / Queue / Execute -> Onchain Proof`
 
+![Demo GIF](./demo_gif.gif)
+
 The current codebase has two layers:
 
 - a calm, public-facing protocol website
