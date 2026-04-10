@@ -78,6 +78,9 @@ export const DeploymentProofSchema = z.object({
   treasuryAddress: AddressSchema.nullable(),
   blockExplorerUrl: z.string().nullable(),
   events: z.array(ProofEventSchema),
+  txProgressCurrent: z.number().int().nonnegative(),
+  txProgressTotal: z.number().int().nonnegative(),
+  txProgressLabel: z.string().nullable(),
   error: z.string().nullable(),
   usedFallback: z.boolean(),
 });
@@ -125,6 +128,9 @@ export function createEmptyDeploymentProof(): DeploymentProof {
     treasuryAddress: null,
     blockExplorerUrl: null,
     events: [],
+    txProgressCurrent: 0,
+    txProgressTotal: 0,
+    txProgressLabel: null,
     error: null,
     usedFallback: false,
   };

@@ -34,6 +34,7 @@ export function RuntimePageClient() {
   const [intent, setIntent] = useState(defaultDemoPreset.intent);
   const [profile, setProfile] = useState<RuntimeProfile>(defaultDemoPreset.profile);
   const [aiProtocolPackage, setAiProtocolPackage] = useState<ProtocolPackage | null>(null);
+  const [runProtocolPackage, setRunProtocolPackage] = useState<ProtocolPackage | null>(null);
   const [aiPlanSource, setAiPlanSource] = useState<"deterministic_local" | "live_ai" | "deterministic_fallback">(
     "deterministic_local",
   );
@@ -46,7 +47,7 @@ export function RuntimePageClient() {
 
   const context = state.context;
   const deterministicProtocolPackage = useMemo(() => generateProtocolPackage(intent), [intent]);
-  const protocolPackage = aiProtocolPackage ?? deterministicProtocolPackage;
+  const protocolPackage = runProtocolPackage ?? aiProtocolPackage ?? deterministicProtocolPackage;
   const requiresWalletRelease = state.matches("releasePending");
   const canLaunchRuntime = intent.trim().length >= 20 && state.matches("idle");
  
@@ -54,9 +55,6 @@ export function RuntimePageClient() {
     startRunAbortRef.current?.abort();
     const controller = new AbortController();
     startRunAbortRef.current = controller;
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 15000);
 
     try {
       const response = await fetch("/api/runtime/ai-plan", {
@@ -95,7 +93,6 @@ export function RuntimePageClient() {
         plannedDecision: null,
       };
     } finally {
-      clearTimeout(timeoutId);
       if (startRunAbortRef.current === controller) {
         startRunAbortRef.current = null;
       }
@@ -191,7 +188,9 @@ export function RuntimePageClient() {
           setStartRunPending(true);
           setStartRunError(null);
           try {
+            onchain.resetOnchainState();
             const resolvedPlan = await resolveAiPlan();
+            setRunProtocolPackage(resolvedPlan.protocolPackage);
             send({
               type: "runtime.start",
               intent: intent.trim(),
@@ -200,6 +199,7 @@ export function RuntimePageClient() {
             });
           } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
+              setStartRunError("Planning request was cancelled. Please click Start run again.");
               return;
             }
             setStartRunError(error instanceof Error ? error.message : "Unable to start run.");
@@ -212,9 +212,11 @@ export function RuntimePageClient() {
           startRunAbortRef.current = null;
           setIntent(defaultDemoPreset.intent);
           setAiProtocolPackage(null);
+          setRunProtocolPackage(null);
           setAiPlanSource("deterministic_local");
           setStartRunPending(false);
           setStartRunError(null);
+          onchain.resetOnchainState();
           send({ type: "runtime.reset" });
         }}
         onConnectWallet={() => {

@@ -15,30 +15,31 @@ export default function EvidencePage() {
 
   return (
     <>
-      <section className="site-section pb-20 pt-10 md:pb-28 md:pt-14">
-        <SectionHeading
-          eyebrow={copy.eyebrow}
-          title={copy.heading}
-        >
-          {copy.body}
-        </SectionHeading>
+      <section className="site-section pb-16 pt-10 md:pb-20 md:pt-14">
+        <div className="info-hero-card">
+          <SectionHeading eyebrow={copy.eyebrow} title={copy.heading}>
+            {copy.body}
+          </SectionHeading>
+        </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <div className="grid gap-14 lg:grid-cols-[240px_minmax(0,1fr)]">
-            <div>
+          <div className="info-grid-shell">
+            <aside className="info-side-note">
               <p className="site-eyebrow">{copy.listLabel}</p>
-              <p className="mt-4 text-base leading-8 text-[var(--site-text-secondary)]">
-                {copy.listBody}
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">Evidence checklist</h2>
+              <p className="mt-4 text-base leading-8 text-[var(--site-text-secondary)]">{copy.listBody}</p>
+              <p className="mt-4 text-sm leading-7 text-[var(--site-text-secondary)]">
+                The right side maps every visible signal from AI planning to chain execution.
               </p>
-            </div>
+            </aside>
 
-            <dl className="border-t border-[var(--site-line)]">
+            <dl className="info-row-table">
               {copy.rows.map((row) => (
                 <div
                   key={row.label}
-                  className="grid gap-4 border-b border-[var(--site-line)] py-6 md:grid-cols-[180px_minmax(0,220px)_minmax(0,1fr)]"
+                  className="info-row"
                 >
                   <dt className="site-eyebrow">{row.label}</dt>
                   <dd className="text-base font-medium text-[var(--site-text)]">{row.value}</dd>
@@ -50,15 +51,12 @@ export default function EvidencePage() {
         </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <SectionHeading
-            eyebrow={copy.fallback.eyebrow}
-            title={copy.fallback.title}
-          />
-          <div className="mt-14 grid gap-10 md:grid-cols-3">
+          <SectionHeading eyebrow={copy.fallback.eyebrow} title={copy.fallback.title} />
+          <div className="info-card-grid mt-12 md:grid-cols-3">
             {copy.fallback.modes.map((mode) => (
-              <div key={mode.title} className="border-t border-[var(--site-line)] pt-5">
+              <div key={mode.title} className="info-glass-card">
                 <h3 className="text-xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">{mode.title}</h3>
                 <p className="mt-4 text-base leading-8 text-[var(--site-text-secondary)]">{mode.body}</p>
               </div>
@@ -67,15 +65,12 @@ export default function EvidencePage() {
         </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <SectionHeading
-            eyebrow={copy.events.eyebrow}
-            title={copy.events.title}
-          />
-          <ol className="mt-14 grid gap-10 lg:grid-cols-2">
+          <SectionHeading eyebrow={copy.events.eyebrow} title={copy.events.title} />
+          <ol className="info-card-grid mt-12 lg:grid-cols-2">
             {copy.events.stages.map((stage, index) => (
-              <li key={stage.name} className="border-t border-[var(--site-line)] pt-5">
+              <li key={stage.name} className="info-glass-card">
                 <p className="site-eyebrow">{String(index + 1).padStart(2, "0")}</p>
                 <h3 className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">
                   {stage.name}
@@ -89,9 +84,9 @@ export default function EvidencePage() {
         </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <div className="max-w-3xl">
+          <div className="info-final-cta max-w-3xl">
             <p className="site-eyebrow">{copy.finalCta.eyebrow}</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--site-text)] md:text-[2.6rem] md:leading-[1.08]">
               {copy.finalCta.title}

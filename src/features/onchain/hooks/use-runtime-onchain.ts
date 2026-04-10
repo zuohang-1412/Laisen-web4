@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { formatEther, type Address } from "viem";
 import {
   useAccount,
@@ -69,6 +69,7 @@ export function useRuntimeOnchain() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [governanceHint, setGovernanceHint] = useState<GovernanceHint>(createEmptyGovernanceHint());
   const [snapshotHydrated, setSnapshotHydrated] = useState(false);
+  const deployInFlightRef = useRef<Promise<DeploymentProof | null> | null>(null);
 
   function upsertProposalHistory(entry: {
     proposalId: bigint | null;
@@ -332,6 +333,11 @@ export function useRuntimeOnchain() {
   }
 
   async function deploy(protocolPackage: ProtocolPackage) {
+    if (deployInFlightRef.current) {
+      return deployInFlightRef.current;
+    }
+
+    const deploymentTask = (async () => {
     setWalletError(null);
 
     if (!isConnected || !address) {
@@ -380,6 +386,9 @@ export function useRuntimeOnchain() {
       walletAddress: address,
       chainId: chainId ?? LAISEN_TESTNET_ID,
       chainName: LAISEN_TESTNET_NAME,
+      txProgressCurrent: 0,
+      txProgressTotal: 0,
+      txProgressLabel: "Preparing deployment transactions",
       error: null,
       usedFallback: false,
     }));
@@ -390,6 +399,20 @@ export function useRuntimeOnchain() {
         publicClient,
         account: address as Address,
         protocolPackage,
+        onProgress: (progress) => {
+          setDeployment((current) => ({
+            ...current,
+            status: "deploying",
+            walletAddress: address,
+            chainId: chainId ?? LAISEN_TESTNET_ID,
+            chainName: LAISEN_TESTNET_NAME,
+            txProgressCurrent: progress.current,
+            txProgressTotal: progress.total,
+            txProgressLabel: progress.label,
+            error: null,
+            usedFallback: false,
+          }));
+        },
       });
       setWalletError(null);
       setDeployment(proof);
@@ -406,6 +429,16 @@ export function useRuntimeOnchain() {
         usedFallback: false,
       }));
       return null;
+    }
+    })();
+
+    deployInFlightRef.current = deploymentTask;
+    try {
+      return await deploymentTask;
+    } finally {
+      if (deployInFlightRef.current === deploymentTask) {
+        deployInFlightRef.current = null;
+      }
     }
   }
 

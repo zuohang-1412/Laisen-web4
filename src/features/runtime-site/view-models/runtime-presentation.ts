@@ -498,7 +498,9 @@ function buildRuntimeStageView(
         protocolState === "deployed"
           ? "The protocol package is live on the target testnet."
           : protocolState === "deploying"
-            ? "Contract deployment is in progress."
+            ? onchain.deployment.txProgressTotal > 0
+              ? `Transaction ${onchain.deployment.txProgressCurrent}/${onchain.deployment.txProgressTotal}: ${onchain.deployment.txProgressLabel ?? "Waiting for wallet confirmation"}`
+              : "Contract deployment is in progress."
             : protocolState === "fallback"
               ? "Chain deployment is unavailable. Safe fallback is armed."
               : protocolState === "failed"
@@ -643,6 +645,7 @@ function buildStepFlow(
 ): RuntimeStageView["stepFlow"] {
   const walletDone = signer === "ready" || signer === "wrong_network" || signer === "low_balance";
   const networkDone = signer === "ready" || signer === "low_balance";
+  const hasRunStarted = run !== "idle" || startRunPending;
   const startRunDone =
     run === "waiting_for_signer" ||
     run === "ready_to_deploy" ||
@@ -650,6 +653,15 @@ function buildStepFlow(
     run === "executing" ||
     run === "completed" ||
     run === "override";
+  const deployUnlocked = hasRunStarted && networkDone;
+  const releaseUnlocked =
+    deployUnlocked &&
+    (deploy === "deployed" ||
+      deploy === "fallback" ||
+      run === "ready_to_release" ||
+      run === "executing" ||
+      run === "completed" ||
+      run === "override");
 
   return [
     {
@@ -682,14 +694,56 @@ function buildStepFlow(
     {
       step: "04",
       title: "Deploy protocol",
-      subtitle: deploy === "deployed" ? "Contracts are live." : deploy === "deploying" ? "Deployment in progress." : deploy === "fallback" ? "Fallback path armed." : "Deploy the package.",
-      status: deploy === "deployed" ? "done" : deploy === "deploying" ? "active" : deploy === "fallback" ? "warning" : deploy === "failed" ? "danger" : run === "ready_to_deploy" || run === "ready_to_release" || run === "executing" || run === "completed" ? "active" : "pending",
+      subtitle:
+        !deployUnlocked
+          ? "Deploy the package."
+          : deploy === "deployed"
+            ? "Contracts are live."
+            : deploy === "deploying"
+              ? "Deployment in progress."
+              : deploy === "fallback"
+                ? "Fallback path armed."
+                : "Deploy the package.",
+      status:
+        !deployUnlocked
+          ? "pending"
+          : deploy === "deployed"
+            ? "done"
+            : deploy === "deploying"
+              ? "active"
+              : deploy === "fallback"
+                ? "warning"
+                : deploy === "failed"
+                  ? "danger"
+                  : run === "ready_to_deploy" || run === "ready_to_release" || run === "executing" || run === "completed"
+                    ? "active"
+                    : "pending",
     },
     {
       step: "05",
       title: "Release mandate",
-      subtitle: release === "ready" ? "Sign the release." : release === "executed" ? "Executed onchain." : release === "rejected" ? "Rejected onchain." : release === "signing" ? "Transaction pending." : "Wait for the release gate.",
-      status: release === "executed" ? "done" : release === "rejected" || release === "failed" ? "danger" : release === "ready" || release === "signing" ? "active" : "pending",
+      subtitle:
+        !releaseUnlocked
+          ? "Wait for the release gate."
+          : release === "ready"
+            ? "Sign the release."
+            : release === "executed"
+              ? "Executed onchain."
+              : release === "rejected"
+                ? "Rejected onchain."
+                : release === "signing"
+                  ? "Transaction pending."
+                  : "Wait for the release gate.",
+      status:
+        !releaseUnlocked
+          ? "pending"
+          : release === "executed"
+            ? "done"
+            : release === "rejected" || release === "failed"
+              ? "danger"
+              : release === "ready" || release === "signing"
+                ? "active"
+                : "pending",
     },
   ] as const;
 }
@@ -936,7 +990,10 @@ function buildDeployCapability(onchain: RuntimeOnchainController, canDeployProto
       name: "Deploy protocol",
       status: "waiting",
       requirement: "Wallet signature",
-      nextAction: "Waiting for contract confirmations.",
+      nextAction:
+        onchain.deployment.txProgressTotal > 0
+          ? `Transaction ${onchain.deployment.txProgressCurrent}/${onchain.deployment.txProgressTotal}`
+          : "Waiting for contract confirmations.",
     };
   }
 

@@ -8,14 +8,14 @@ export const siteCopy = {
   },
   overview: {
     badge: "Web4.0",
-    eyebrow: "Autonomous execution engine",
-    title: "Turn intent into deployment, release, and proof.",
+    eyebrow: "Cyber runtime protocol",
+    title: "Turn intent into live execution and chain proof.",
     body:
-      "Laisen prepares a protocol package, checks wallet and network state, and shows each step as execution moves on Base Sepolia.",
+      "Laisen prepares a protocol package, checks wallet and network state, and surfaces each stage as execution moves on testnet.",
     metrics: [
-      { label: "Wallet", value: "MetaMask" },
-      { label: "Testnet", value: "Base Sepolia" },
-      { label: "Flow", value: "Deploy → Release" },
+      { label: "Wallet", value: "metamask, rabby, phantom, coinbase wallet, okx wallet" },
+      { label: "Testnet", value: "Base Sepolia, Sepolia, Optimism Sepolia, Arbitrum Sepolia" },
+      { label: "Flow", value: "Deploy" },
     ],
     product: {
       eyebrow: "What Laisen does",
@@ -67,8 +67,8 @@ export const siteCopy = {
     },
     finalCta: {
       eyebrow: "Next step",
-      title: "Open the workspace.",
-      body: "Go straight to wallet, chain, deploy, and release.",
+      title: "Open the runtime.",
+      body: "Ready to go? Launch now and run the full mission corridor.",
     },
     attribution: {
       eyebrow: "Built with",
@@ -238,7 +238,7 @@ export const siteCopy = {
     stageLabel: "Above the fold",
     stageBody: "The main actions stay in view: wallet, network, deploy, launch, and release.",
     sequenceLabel: "Core path",
-    sequenceValue: "Mission → Wallet → Deploy → Release",
+    sequenceValue: "Mission → Wallet → Deploy",
     proofLabel: "What stays visible",
     proofRows: [
       { label: "Provider", value: "GMI Cloud" },

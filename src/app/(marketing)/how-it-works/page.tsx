@@ -15,33 +15,32 @@ export default function HowItWorksPage() {
 
   return (
     <>
-      <section className="site-section pb-20 pt-10 md:pb-28 md:pt-14">
-        <SectionHeading
-          eyebrow={copy.eyebrow}
-          title={copy.heading}
-        >
-          {copy.body}
-        </SectionHeading>
+      <section className="site-section pb-16 pt-10 md:pb-20 md:pt-14">
+        <div className="info-hero-card">
+          <SectionHeading eyebrow={copy.eyebrow} title={copy.heading}>
+            {copy.body}
+          </SectionHeading>
+        </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <div className="grid gap-14 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <div>
+          <div className="info-grid-shell">
+            <aside className="info-side-note">
               <p className="site-eyebrow">{copy.sequenceLabel}</p>
-              <p className="mt-4 text-base leading-8 text-[var(--site-text-secondary)]">
-                {copy.sequenceBody}
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">Linear runtime path</h2>
+              <p className="mt-4 text-base leading-8 text-[var(--site-text-secondary)]">{copy.sequenceBody}</p>
+              <p className="mt-4 text-sm leading-7 text-[var(--site-text-secondary)]">
+                Keep this as your operating order: mission - package - wallet - chain - deploy - release.
               </p>
-            </div>
+            </aside>
 
-            <ol className="space-y-10">
+            <ol className="info-step-list">
               {copy.steps.map((step) => (
-                <li key={step.number} className="grid gap-5 border-t border-[var(--site-line)] pt-5 md:grid-cols-[92px_minmax(0,1fr)]">
-                  <p className="site-eyebrow">{step.number}</p>
-                  <div>
-                    <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">{step.title}</h2>
-                    <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--site-text-secondary)]">{step.body}</p>
-                  </div>
+                <li key={step.number} className="info-step-card">
+                  <p className="site-eyebrow">Step {step.number}</p>
+                  <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--site-text)]">{step.title}</h3>
+                  <p className="mt-4 max-w-2xl text-base leading-8 text-[var(--site-text-secondary)]">{step.body}</p>
                 </li>
               ))}
             </ol>
@@ -49,9 +48,9 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="site-divider py-24 md:py-28">
+      <section className="site-divider py-20 md:py-24">
         <div className="site-section">
-          <div className="max-w-3xl">
+          <div className="info-final-cta max-w-3xl">
             <p className="site-eyebrow">{copy.finalCta.eyebrow}</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--site-text)] md:text-[2.6rem] md:leading-[1.08]">
               {copy.finalCta.title}

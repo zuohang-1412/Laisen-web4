@@ -34,6 +34,11 @@ type DeployParams = {
   publicClient: PublicClient;
   account: Address;
   protocolPackage: ProtocolPackage;
+  onProgress?: (progress: {
+    current: number;
+    total: number;
+    label: string;
+  }) => void;
 };
 
 type MandateParams = {
@@ -75,7 +80,18 @@ export async function deployProtocolPackage({
   publicClient,
   account,
   protocolPackage,
+  onProgress,
 }: DeployParams): Promise<DeploymentProof> {
+  const deploymentSteps = buildDeploymentStepPlan(account);
+  const markDeployProgress = (index: number) => {
+    const label = deploymentSteps[index] ?? "Deployment transaction";
+    onProgress?.({
+      current: Math.min(index + 1, deploymentSteps.length),
+      total: deploymentSteps.length,
+      label,
+    });
+  };
+
   const daoHash = digestJson({
     name: protocolPackage.daoName,
     summary: protocolPackage.daoSummary,
@@ -88,6 +104,7 @@ export async function deployProtocolPackage({
   });
   const founderHash = digestJson(protocolPackage.founderPersona);
 
+  markDeployProgress(0);
   const tokenTxHash = await walletClient.deployContract({
     account,
     chain: laisenTestnet,
@@ -104,6 +121,7 @@ export async function deployProtocolPackage({
   const tokenReceipt = await publicClient.waitForTransactionReceipt({ hash: tokenTxHash });
   const tokenAddress = getRequiredContractAddress(tokenReceipt.contractAddress, "governance token");
 
+  markDeployProgress(1);
   const timelockTxHash = await walletClient.deployContract({
     account,
     chain: laisenTestnet,
@@ -115,6 +133,7 @@ export async function deployProtocolPackage({
   const timelockReceipt = await publicClient.waitForTransactionReceipt({ hash: timelockTxHash });
   const timelockAddress = getRequiredContractAddress(timelockReceipt.contractAddress, "timelock");
 
+  markDeployProgress(2);
   const governorTxHash = await walletClient.deployContract({
     account,
     chain: laisenTestnet,
@@ -139,16 +158,20 @@ export async function deployProtocolPackage({
     account,
     timelockAddress,
     governorAddress,
+    onProgress: (stepOffset) => markDeployProgress(3 + stepOffset),
   });
 
+  const distributionStartIndex = 6;
   await distributeGovernanceToken({
     walletClient,
     publicClient,
     account,
     tokenAddress,
     totalSupplyUnits: protocolPackage.token.totalSupplyUnits,
+    onProgress: (stepOffset) => markDeployProgress(distributionStartIndex + stepOffset),
   });
 
+  markDeployProgress(deploymentSteps.length - 1);
   const protocolTxHash = await walletClient.deployContract({
     account,
     chain: laisenTestnet,
@@ -225,6 +248,9 @@ export async function deployProtocolPackage({
     treasuryAddress: account,
     blockExplorerUrl: `${LAISEN_TESTNET_EXPLORER}/tx/${protocolTxHash}`,
     events: deploymentEvents,
+    txProgressCurrent: deploymentSteps.length,
+    txProgressTotal: deploymentSteps.length,
+    txProgressLabel: "Deployment complete",
     error: null,
     usedFallback: false,
   });
@@ -648,12 +674,14 @@ async function configureTimelockRoles({
   account,
   timelockAddress,
   governorAddress,
+  onProgress,
 }: {
   walletClient: WalletClient;
   publicClient: PublicClient;
   account: Address;
   timelockAddress: Address;
   governorAddress: Address;
+  onProgress?: (stepOffset: number) => void;
 }) {
   const proposerRole = (await publicClient.readContract({
     address: timelockAddress,
@@ -671,6 +699,7 @@ async function configureTimelockRoles({
     functionName: "EXECUTOR_ROLE",
   })) as `0x${string}`;
 
+  onProgress?.(0);
   await writeAndConfirm({
     walletClient,
     publicClient,
@@ -680,6 +709,7 @@ async function configureTimelockRoles({
     functionName: "grantRole",
     args: [proposerRole, governorAddress],
   });
+  onProgress?.(1);
   await writeAndConfirm({
     walletClient,
     publicClient,
@@ -689,6 +719,7 @@ async function configureTimelockRoles({
     functionName: "grantRole",
     args: [cancellerRole, governorAddress],
   });
+  onProgress?.(2);
   await writeAndConfirm({
     walletClient,
     publicClient,
@@ -706,12 +737,14 @@ async function distributeGovernanceToken({
   account,
   tokenAddress,
   totalSupplyUnits,
+  onProgress,
 }: {
   walletClient: WalletClient;
   publicClient: PublicClient;
   account: Address;
   tokenAddress: Address;
   totalSupplyUnits: bigint;
+  onProgress?: (stepOffset: number) => void;
 }) {
   const contributorAddress = maybeAddress(process.env.NEXT_PUBLIC_LAISEN_CONTRIBUTOR_ADDRESS, account);
   const communityAddress = maybeAddress(process.env.NEXT_PUBLIC_LAISEN_COMMUNITY_ADDRESS, account);
@@ -719,7 +752,9 @@ async function distributeGovernanceToken({
   const contributorUnits = (totalSupplyUnits * BigInt(23)) / BigInt(100);
   const communityUnits = (totalSupplyUnits * BigInt(35)) / BigInt(100);
 
+  let stepOffset = 0;
   if (contributorAddress !== account && contributorUnits > BigInt(0)) {
+    onProgress?.(stepOffset);
     await writeAndConfirm({
       walletClient,
       publicClient,
@@ -729,9 +764,11 @@ async function distributeGovernanceToken({
       functionName: "transfer",
       args: [contributorAddress, contributorUnits],
     });
+    stepOffset += 1;
   }
 
   if (communityAddress !== account && communityUnits > BigInt(0)) {
+    onProgress?.(stepOffset);
     await writeAndConfirm({
       walletClient,
       publicClient,
@@ -742,6 +779,27 @@ async function distributeGovernanceToken({
       args: [communityAddress, communityUnits],
     });
   }
+}
+
+function buildDeploymentStepPlan(account: Address) {
+  const contributorAddress = maybeAddress(process.env.NEXT_PUBLIC_LAISEN_CONTRIBUTOR_ADDRESS, account);
+  const communityAddress = maybeAddress(process.env.NEXT_PUBLIC_LAISEN_COMMUNITY_ADDRESS, account);
+  const steps = [
+    "Deploy governance token",
+    "Deploy timelock",
+    "Deploy governor",
+    "Grant timelock proposer role",
+    "Grant timelock canceller role",
+    "Grant timelock executor role",
+  ];
+  if (contributorAddress !== account) {
+    steps.push("Transfer contributor allocation");
+  }
+  if (communityAddress !== account) {
+    steps.push("Transfer community allocation");
+  }
+  steps.push("Deploy runtime protocol");
+  return steps;
 }
 
 async function executeDaoLifecycle({

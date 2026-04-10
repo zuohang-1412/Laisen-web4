@@ -141,10 +141,15 @@ export function RuntimeLiveStage({
   const planningCard = buildPlanningCard(context.runtimeStage, startRunPending, startRunError);
 
   return (
-    <>
+    <div className="runtime-page-shell">
       <section className="runtime-workspace-shell">
-        <div className="runtime-workspace-grid">
-          <aside className="runtime-rail">
+        <div className="runtime-content-shell runtime-workspace-grid">
+          <aside className="runtime-rail runtime-column-shell runtime-column-context">
+            <div className="runtime-column-header">
+              <span className="runtime-zone-tag runtime-zone-tag-context">01 Context</span>
+              <p className="site-eyebrow">Context rail</p>
+              <p className="runtime-column-subtitle">Founder state, package profile, and authority ratio.</p>
+            </div>
             <div className="runtime-panel">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -192,8 +197,14 @@ export function RuntimeLiveStage({
             </div>
           </aside>
 
-          <div className="runtime-center">
-            <div className="runtime-panel">
+          <div className="runtime-center runtime-column-shell runtime-column-workspace">
+            <div className="runtime-column-header">
+              <span className="runtime-zone-tag runtime-zone-tag-workspace">02 Workspace</span>
+              <p className="site-eyebrow">Execution workspace</p>
+              <p className="runtime-column-subtitle">Define mission intent, then advance through planning and release.</p>
+            </div>
+
+            <div className="runtime-panel runtime-main-panel">
               <div className="flex items-center justify-between gap-4 border-b border-[var(--site-line)] pb-5">
                 <div>
                   <p className="site-eyebrow">{runtimeCopy.center.status}</p>
@@ -213,15 +224,76 @@ export function RuntimeLiveStage({
                 </div>
               </div>
 
-              <div className="mt-5">
+              <div className="mt-5 runtime-intent-block">
                 <label htmlFor="runtime-intent" className="site-eyebrow">{runtimeCopy.center.mission}</label>
                 <textarea
                   id="runtime-intent"
                   value={intent}
                   onChange={(event) => onIntentChange(event.target.value)}
                   placeholder={runtimeCopy.placeholder.mission}
-                  className="mt-3 min-h-32 w-full rounded-[24px] border border-[var(--site-line)] bg-white px-5 py-4 text-base leading-8 text-[var(--site-text)] outline-none transition focus:border-[rgba(16,20,24,0.22)]"
+                  className="runtime-intent-textarea"
                 />
+                <div className="runtime-action-toolbar">
+                  {primaryAction ? (
+                    <button
+                      type="button"
+                      onClick={
+                        primaryAction.key === "connect"
+                          ? onConnectWallet
+                          : primaryAction.key === "switch"
+                            ? onSwitchNetwork
+                            : primaryAction.key === "start"
+                              ? onStart
+                              : primaryAction.key === "deploy"
+                                ? onDeployProtocol
+                                : onApproveMandate
+                      }
+                      disabled={primaryAction.disabled}
+                      className="site-primary-cta h-11 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <span className="inline-flex h-4 w-4 items-center justify-center">
+                        {renderPrimaryActionIcon(primaryAction.key)}
+                      </span>
+                      {primaryAction.label}
+                    </button>
+                  ) : null}
+                  {requiresWalletRelease ? (
+                    <button type="button" onClick={onRejectMandate} className="site-secondary-button h-11">
+                      {runtimeCopy.buttons.reject}
+                    </button>
+                  ) : null}
+                  {canOverride ? (
+                    <button type="button" onClick={onOpenOverride} className="site-secondary-button h-11">
+                      <CornerDownLeft className="h-4 w-4" />
+                      {runtimeCopy.buttons.override}
+                    </button>
+                  ) : null}
+                  {overrideActive ? (
+                    <button type="button" onClick={onRedirect} className="site-secondary-button h-11">
+                      <Route className="h-4 w-4" />
+                      {runtimeCopy.buttons.redirect}
+                    </button>
+                  ) : null}
+                  {overrideActive ? (
+                    <button
+                      type="button"
+                      onClick={onAbort}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[rgba(255,107,107,0.12)] px-5 text-sm font-medium text-[#b04b4b]"
+                    >
+                      <ShieldAlert className="h-4 w-4" />
+                      {runtimeCopy.buttons.abort}
+                    </button>
+                  ) : null}
+                  {overrideActive ? (
+                    <button type="button" onClick={onResume} className="site-secondary-button h-11">
+                      <ShieldAlert className="h-4 w-4" />
+                      {runtimeCopy.buttons.resume}
+                    </button>
+                  ) : null}
+                </div>
+                {startRunError ? (
+                  <p className="mt-3 text-sm leading-7 text-[#b04b4b]">{startRunError}</p>
+                ) : null}
               </div>
 
               <div className="mt-6 runtime-actions-grid">
@@ -265,72 +337,15 @@ export function RuntimeLiveStage({
                   </ol>
                 </div>
               ) : null}
-
-              <div className="mt-6 flex flex-wrap gap-3 border-t border-[var(--site-line)] pt-5">
-                {primaryAction ? (
-                  <button
-                    type="button"
-                    onClick={
-                  primaryAction.key === "connect"
-                        ? onConnectWallet
-                        : primaryAction.key === "switch"
-                          ? onSwitchNetwork
-                          : primaryAction.key === "start"
-                            ? onStart
-                            : primaryAction.key === "deploy"
-                              ? onDeployProtocol
-                              : onApproveMandate
-                    }
-                    disabled={primaryAction.disabled}
-                    className="site-primary-cta h-11 disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    <span className="inline-flex h-4 w-4 items-center justify-center">
-                      {renderPrimaryActionIcon(primaryAction.key)}
-                    </span>
-                    {primaryAction.label}
-                  </button>
-                ) : null}
-                {requiresWalletRelease ? (
-                  <button type="button" onClick={onRejectMandate} className="site-secondary-button h-11">
-                    {runtimeCopy.buttons.reject}
-                  </button>
-                ) : null}
-                {canOverride ? (
-                  <button type="button" onClick={onOpenOverride} className="site-secondary-button h-11">
-                    <CornerDownLeft className="h-4 w-4" />
-                    {runtimeCopy.buttons.override}
-                  </button>
-                ) : null}
-                {overrideActive ? (
-                  <button type="button" onClick={onRedirect} className="site-secondary-button h-11">
-                    <Route className="h-4 w-4" />
-                    {runtimeCopy.buttons.redirect}
-                  </button>
-                ) : null}
-                {overrideActive ? (
-                  <button
-                    type="button"
-                    onClick={onAbort}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[rgba(255,107,107,0.12)] px-5 text-sm font-medium text-[#b04b4b]"
-                  >
-                    <ShieldAlert className="h-4 w-4" />
-                    {runtimeCopy.buttons.abort}
-                  </button>
-                ) : null}
-                {overrideActive ? (
-                  <button type="button" onClick={onResume} className="site-secondary-button h-11">
-                    <ShieldAlert className="h-4 w-4" />
-                    {runtimeCopy.buttons.resume}
-                  </button>
-                ) : null}
-              </div>
-              {startRunError ? (
-                <p className="mt-3 text-sm leading-7 text-[#b04b4b]">{startRunError}</p>
-              ) : null}
             </div>
           </div>
 
-          <aside className="runtime-rail">
+          <aside className="runtime-rail runtime-column-shell runtime-column-data">
+            <div className="runtime-column-header">
+              <span className="runtime-zone-tag runtime-zone-tag-data">03 Onchain</span>
+              <p className="site-eyebrow">Onchain status</p>
+              <p className="runtime-column-subtitle">Wallet, deployment, and current proof snapshot.</p>
+            </div>
             <div className="runtime-panel">
               <div className="flex items-center justify-between gap-3">
                 <p className="site-eyebrow">{runtimeCopy.rails.wallet}</p>
@@ -390,7 +405,13 @@ export function RuntimeLiveStage({
       </section>
 
       <section className="runtime-subsection">
-        <div className="runtime-detail-stack">
+        <div className="runtime-content-shell runtime-detail-stack runtime-data-stage">
+          <div className="runtime-data-header">
+            <span className="runtime-zone-tag runtime-zone-tag-evidence">04 Evidence</span>
+            <p className="site-eyebrow">State and evidence stream</p>
+            <p className="runtime-column-subtitle">Live status transitions, trace evidence, and proposal activity.</p>
+          </div>
+
           <div className="runtime-decision-grid">
             <StateBlock
               label={runtimeCopy.center.signal}
@@ -574,7 +595,7 @@ export function RuntimeLiveStage({
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 
@@ -752,9 +773,20 @@ function getPrimaryAction({
     };
   }
 
+  if (onchain.deployment.status === "deploying") {
+    const hasProgress = onchain.deployment.txProgressTotal > 0;
+    return {
+      key: "deploy" as const,
+      label: hasProgress
+        ? `Transaction ${onchain.deployment.txProgressCurrent} / ${onchain.deployment.txProgressTotal}`
+        : "Preparing transaction requests...",
+      disabled: true,
+      icon: undefined,
+    };
+  }
+
   if (
     canDeployProtocol &&
-    onchain.deployment.status !== "deploying" &&
     onchain.deployment.status !== "deployed" &&
     onchain.deployment.status !== "fallback_ready"
   ) {
